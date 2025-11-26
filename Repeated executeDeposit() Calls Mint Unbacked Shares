@@ -1,0 +1,15 @@
+There is no persistent tracking that a user's deposit for a given epoch has already been executed.
+So, even after the queuedDeposit[user][epoch] is zeroed out, the vault continues to compute userAssetsDeposited and sharesReceived based on the same fulfilled epoch state, which remains unchanged.
+That means a second call to executeDeposit(user, epoch) will just mint the same number of shares again, since:
+
+from Hypovault::execute function
+
+```solidity 
+uint256 queuedDepositAmount = queuedDeposit[user][epoch]; // becomes 0
+...
+uint256 userAssetsDeposited = Math.mulDiv(0, X, Y); // = 0
+uint256 sharesReceived = Math.mulDiv(0, Z, W); // = 0
+
+```
+
+You can call `fulfillDeposits()` first, which advances the epoch and carries over assetsRemaining. This lets you manipulate the internal epoch index to reuse data, or submit deposits across boundaries in such a way that multiple epochs reflect the same backing data while `executeDeposit()` can still be called multiple times across epochs using stale state.

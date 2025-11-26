@@ -1,0 +1,27 @@
+```solidity
+    function cancelWithdrawal(address withdrawer) external onlyManager {
+        uint256 currentEpoch = withdrawalEpoch;
+
+        PendingWithdrawal memory currentPendingWithdrawal = queuedWithdrawal[withdrawer][
+            currentEpoch
+        ];
+
+        queuedWithdrawal[withdrawer][currentEpoch] = PendingWithdrawal({amount: 0, basis: 0});
+        userBasis[withdrawer] += currentPendingWithdrawal.basis;
+
+        withdrawalEpochState[currentEpoch].sharesWithdrawn -= currentPendingWithdrawal.amount;
+
+            //This part 
+        _mintVirtual(withdrawer, currentPendingWithdrawal.amount);
+
+        emit WithdrawalCancelled(withdrawer, currentPendingWithdrawal.amount);
+    }
+
+```
+
+
+There is no check to ensure the original withdrawal was backed by assets.
+
+There is no asset accounting reversal during cancellation.
+
+The function assumes the vault still holds the assets — which may not be true

@@ -1,0 +1,11 @@
+function test_CanRequestZeroDeposit() public {
+        uint128 zeroAmount = 0;
+
+        vm.prank(user1);
+        vault.requestDeposit(zeroAmount);
+
+        uint256 depositEpoch = vault.depositEpoch();
+        uint256 queued = vault.queuedDeposit(user1, depositEpoch);
+
+        assertEq(queued, 0, "Zero deposit should not be queued or should revert");
+    }

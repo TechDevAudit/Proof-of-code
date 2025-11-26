@@ -1,0 +1,17 @@
+function test_SybilDustDeposits() public {
+    uint128 dustAmount = 1;
+    uint256 epoch = vault.depositEpoch();
+
+    for (uint256 i = 0; i < 100; i++) {
+        address sybil = address(uint160(uint256(keccak256(abi.encode(i)))));
+        token.mint(sybil, dustAmount);
+
+        vm.startPrank(sybil);
+        token.approve(address(vault), dustAmount);
+        vault.requestDeposit(dustAmount);
+        vm.stopPrank();
+    }
+
+    (uint128 assetsDeposited,,) = vault.depositEpochState(epoch);
+    assertEq(assetsDeposited, dustAmount * 100, "Dust deposits did not accumulate as expected");
+}
